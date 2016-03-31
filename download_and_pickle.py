@@ -136,6 +136,11 @@ def merge_datasets(pickle_files, train_size, valid_size=0):
   return valid_dataset, valid_labels, train_dataset, train_labels
             
 # Main starts. We only want to donwload files if pickle_file is not present
+def randomize(dataset, labels):
+  permutation = np.random.permutation(labels.shape[0])
+  shuffled_dataset = dataset[permutation,:,:]
+  shuffled_labels = labels[permutation]
+  return shuffled_dataset, shuffled_labels
 
 pickle_file = 'notMNIST.pickle'
 if os.path.exists(pickle_file):
@@ -165,9 +170,19 @@ valid_dataset, valid_labels, train_dataset, train_labels = merge_datasets(
   train_datasets, train_size, valid_size)
 _, _, test_dataset, test_labels = merge_datasets(test_datasets, test_size)
 
-print('Training:', train_dataset.shape, train_labels.shape)
-print('Validation:', valid_dataset.shape, valid_labels.shape)
+train_dataset, train_labels = randomize(train_dataset, train_labels)
+test_dataset, test_labels = randomize(test_dataset, test_labels)
+train_size = 200000
+valid_size = 10000
+
+valid_dataset = train_dataset[:valid_size,:,:]
+valid_labels = train_labels[:valid_size]
+train_dataset = train_dataset[valid_size:valid_size+train_size,:,:]
+train_labels = train_labels[valid_size:valid_size+train_size]
+print('Training', train_dataset.shape, train_labels.shape)
+print('Validation', valid_dataset.shape, valid_labels.shape)
 print('Testing:', test_dataset.shape, test_labels.shape)
+
 try:
   f = open(pickle_file, 'wb')
   save = {
